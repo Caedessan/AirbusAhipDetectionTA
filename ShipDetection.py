@@ -1,9 +1,26 @@
 import numpy as np
-from keras.layers import Conv2D, Conv2DTranspose, BatchNormalization, MaxPooling2D, Dropout, concatenate, Activation
+from PIL import Image
+from matplotlib.image import imread
+from keras.layers import Conv2D, Conv2DTranspose, BatchNormalization, MaxPooling2D, Dropout, concatenate, Activation, Input
 from keras.models import Model
 from keras import backend as K
+''''''
+def applyMask(picPath, mask):
+    '''Function for applying a mask to a picture'''
+    pic = imread(picPath)
+    for i in pic.shape[0]:
+        for j in pic.shape[1]:
+            if mask[i][j] == 1:
+                pic[i][j][0] = 255
+    return pic
+
+def saveOutput(outputPath, pic):
+    '''Function designated to save networks output'''
+    img = Image.fromarray(pic)
+    img.save(outputPath)
 
 def decode(df, imgHeight, imgWidth):
+    '''Function for decoding mask data'''
     image = np.zeros((imgWidth*imgHeight))
     amountOfRows = df.shape[0]
     if amountOfRows >= 2:
@@ -19,21 +36,23 @@ def decode(df, imgHeight, imgWidth):
         return np.zeros((imgHeight, imgWidth))
     while True:
         for i in range(int(amounts[0])):
-            image[int(values[0])+i]=1
+            image[int(values[0])+i-1]=1
         values = values[1:]
         amounts = amounts[1:]
         if len(amounts) == 0:
             break
     return image.reshape((imgHeight,imgWidth))
 
-def dice_coef(y_true, y_pred, epsilon=0.000001):
+'''Loss function'''
+def dice_coef(y_true, y_pred, epsilon=0.00001):
     axes = tuple(range(1, len(y_pred.shape) - 1))
-    numerator = 2. * np.sum(y_pred * y_true, axes)
-    denominator = np.sum(np.square(y_pred) + np.square(y_true), axes)
-    return np.mean(numerator / (denominator + epsilon))
+    numerator = 2. * K.sum(y_pred * y_true, axes)
+    denominator = K.sum(K.square(y_pred) + K.square(y_true), axes)
+    return K.mean(numerator / (denominator + epsilon))
 
 def dice_coef_loss(y_true, y_pred):
-    return 1-dice_coef(y_true, y_pred)
+    l = 1-dice_coef(y_true, y_pred)
+    return l
 
 def conv2d_block(input_tensor, n_filters, kernel_size=3):
     """Function to add 2 convolutional layers with the parameters passed to it"""
@@ -53,6 +72,7 @@ def conv2d_block(input_tensor, n_filters, kernel_size=3):
 
 
 def get_unet(input_img, n_filters=16, dropout=0.1):
+    '''Function for getting model structure'''
     # Contracting Path
     c1 = conv2d_block(input_img, n_filters * 1, kernel_size=3)
     p1 = MaxPooling2D((2, 2))(c1)

@@ -3,10 +3,10 @@ import pandas as pd
 import keras
 from matplotlib.image import imread
 import ShipDetection
-
+import skimage.measure
 class DataGenerator(keras.utils.Sequence):
-    'Generates data for Keras'
-    def __init__(self, listIDs, masksEncoded, batch_size=32, dim=(768,768,3), shuffle=True):
+    '''Generates data for Keras'''
+    def __init__(self, listIDs, masksEncoded, batch_size=8, dim=(256,256,3), shuffle=False):
         'Initialization'
         self.dim = dim
         self.batch_size = batch_size
@@ -40,17 +40,13 @@ class DataGenerator(keras.utils.Sequence):
         'Generates data containing batch_size samples'  # X : (n_samples, *dim, n_channels)
         # Initialization
         X = np.empty((self.batch_size, self.dim[0],self.dim[1],self.dim[2]))
-        y = np.empty((self.batch_size, self.dim[0],self.dim[1],self.dim[2]))
+        y = np.empty((self.batch_size, self.dim[0],self.dim[1]))
         # Generate data
         for i, ID in enumerate(listIDsTemp):
             # Store sample
             X[i] = imread(ID)
             a = ID[-13:]
             y_enc = self.masksEncoded.loc[a].astype("str")
-            y_decoded = ShipDetection.decode(y_enc,self.dim[0],self.dim[1])
-            y[i] = X[i].copy()
-            for k in range(self.dim[0]):
-                for j in range(self.dim[1]):
-                    if y_decoded[k][j] == 1:
-                        y[i][k][j][0] = 255
+            y_decoded = ShipDetection.decode(y_enc,768,768)
+            y[i] = skimage.measure.block_reduce(y_decoded, (3,3), np.max)
         return X, y
