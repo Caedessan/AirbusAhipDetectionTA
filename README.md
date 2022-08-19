@@ -16,4 +16,4 @@ model1.h5 is a trained model
 
 
 ModelInference can be called from terminal with parameters:
-    <p>python ModelInference  [Path to chosen model][Path to chosen image][Path for output image]</p>
+    <p>python ModelInference.py [Path to chosen model][Path to chosen image][Path for output image]</p>
