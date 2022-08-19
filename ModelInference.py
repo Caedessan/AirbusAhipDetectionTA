@@ -4,6 +4,7 @@ from keras.models import load_model
 from matplotlib.image import imread
 import ShipDetection
 import sys
+from PIL import Image
 '''Model inference file
     parameters are:
     <Path to chosen model> <Path to chosen image> <Path for output image>
@@ -13,7 +14,10 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
             try:
                 model = load_model(sys.argv[1], custom_objects = {"dice_coef_loss":ShipDetection.dice_coef_loss})
-                pic = imread(sys.argv[2])
+                foo = Image.open(sys.argv[2])
+                foo = foo.resize((256, 256), Image.ANTIALIAS)
+                foo = foo.convert("L")
+                pic = np.array(foo)
                 with tf.device("/CPU:0"):
                     res = model.predict(np.array([pic]))
                 mask = np.rint(np.array(res[0])).reshape((256, 256))
