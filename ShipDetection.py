@@ -8,11 +8,12 @@ from keras import backend as K
 def applyMask(picPath, mask):
     '''Function for applying a mask to a picture'''
     pic = imread(picPath)
-    for i in pic.shape[0]:
-        for j in pic.shape[1]:
+    picArray = np.array(pic)
+    for i in range(picArray.shape[0]):
+        for j in range(picArray.shape[1]):
             if mask[i][j] == 1:
-                pic[i][j][0] = 255
-    return pic
+                picArray[i][j][0] = 255
+    return picArray
 
 def saveOutput(outputPath, pic):
     '''Function designated to save networks output'''
