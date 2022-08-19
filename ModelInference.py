@@ -12,22 +12,25 @@ from PIL import Image
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
+        try:
+            model = load_model(sys.argv[1], custom_objects = {"dice_coef_loss":ShipDetection.dice_coef_loss})
             try:
-                model = load_model(sys.argv[1], custom_objects = {"dice_coef_loss":ShipDetection.dice_coef_loss})
                 foo = Image.open(sys.argv[2])
-                foo = foo.resize((256, 256), Image.ANTIALIAS)
-                foo = foo.convert("L")
+                foo = foo.resize((256, 256), Image.Resampling.LANCZOS)
+                foo = foo.convert('RGB')
                 pic = np.array(foo)
-                with tf.device("/CPU:0"):
-                    res = model.predict(np.array([pic]))
-                mask = np.rint(np.array(res[0])).reshape((256, 256))
-                newPic = ShipDetection.applyMask(sys.argv[2], mask)
-                if len(sys.argv) >= 4:
-                    ShipDetection.saveOutput(sys.argv[3],newPic)
-                else:
-                    ShipDetection.saveOutput("output/outPic.jpg",newPic)
             except:
-                print("Wrong arguments")
+                pic = imread(sys.argv[2])
+            with tf.device("/CPU:0"):
+                res = model.predict(np.array([pic]))
+            mask = np.rint(np.array(res[0])).reshape((256, 256))
+            newPic = ShipDetection.applyMask(sys.argv[2], mask)
+            if len(sys.argv) >= 4:
+                ShipDetection.saveOutput(sys.argv[3],newPic)
+            else:
+                ShipDetection.saveOutput("output/outPic.jpg",newPic)
+        except:
+            print("Wrong arguments")
 # model = load_model("modelFinal1", custom_objects = {"dice_coef_loss":ShipDetection.dice_coef_loss})
 #
 # pic = imread("data/train_v2/fcfc12d8d.jpg")

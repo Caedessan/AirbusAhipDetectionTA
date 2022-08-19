@@ -7,7 +7,13 @@ from keras import backend as K
 ''''''
 def applyMask(picPath, mask):
     '''Function for applying a mask to a picture'''
-    pic = imread(picPath)
+    try:
+        foo = Image.open("data/test_v2/00c3db267.jpg")
+        foo = foo.resize((256, 256), Image.Resampling.LANCZOS)
+        foo = foo.convert('RGB')
+        pic = np.array(foo)
+    except:
+        pic = imread("data/test_v2/00c3db267.jpg")
     picArray = np.array(pic)
     for i in range(picArray.shape[0]):
         for j in range(picArray.shape[1]):
